@@ -291,6 +291,40 @@
           </div>
         </div>
         <div
+          v-if="estimateEnabled"
+          class="option mt-3"
+        >
+          <div class="form-group">
+            <label class="mb-1">{{ $t('timeEstimate') }}</label>
+            <div class="d-flex align-items-center">
+              <input
+                v-model.number="estimateMinutes"
+                type="number"
+                min="1"
+                max="1440"
+                class="form-control estimate-input"
+              >
+              <span class="ml-2">{{ $t('timeEstimateMinutes') }}</span>
+              <button
+                v-if="aiEstimateAvailable"
+                type="button"
+                class="btn btn-secondary btn-sm ml-auto"
+                :disabled="estimating"
+                @click="estimateWithAi()"
+              >
+                {{ estimating ? $t('estimating') : $t('estimateWithAi') }}
+              </button>
+            </div>
+            <div
+              v-if="aiEstimate"
+              class="small-text mt-2 ai-estimate-rationale"
+            >
+              {{ $t('aiEstimateRange', { low: aiEstimate.low, high: aiEstimate.high }) }}.
+              {{ aiEstimate.rationale }}
+            </div>
+          </div>
+        </div>
+        <div
           v-if="task.type === 'daily'"
           class="option mt-3"
         >
@@ -1232,6 +1266,14 @@
     height: 2rem;
   }
 
+  .estimate-input {
+    width: 6rem;
+  }
+
+  .ai-estimate-rationale {
+    color: $gray-100;
+  }
+
   .input-notes {
     height: 3.5rem;
   }
@@ -1308,6 +1350,8 @@ import gripIcon from '@/assets/svg/grip.svg?raw';
 import InformationIcon from '@/components/ui/informationIcon.vue';
 import alertIcon from '@/assets/svg/for-css/alert-white.svg?raw';
 
+const AI_ENABLED = import.meta.env.AI_ENABLED === 'true';
+
 export default {
   components: {
     InformationIcon,
@@ -1369,6 +1413,8 @@ export default {
         linkClose: '</a>',
       },
       taskValue: 0,
+      estimating: false,
+      aiEstimate: null,
     };
   },
   computed: {
@@ -1400,6 +1446,36 @@ export default {
           || this.advancedSettingsShowTaskAlias;
     },
     // endregion advanced settings
+    // Time estimates are for the user's own todos and dailies
+    estimateEnabled () {
+      return ['daily', 'todo'].indexOf(this.task.type) > -1
+        && this.isUserTask
+        && !this.isChallengeTask
+        && !(this.task.group && this.task.group.id);
+    },
+    aiEstimateAvailable () {
+      return AI_ENABLED
+        && this.estimateEnabled
+        && this.purpose === 'edit'
+        && Boolean(this.user.preferences.ai && this.user.preferences.ai.enabled);
+    },
+    estimateMinutes: {
+      get () {
+        return (this.task.estimate && this.task.estimate.minutes) || '';
+      },
+      set (value) {
+        const minutes = Math.round(Number(value));
+        if (!value || !Number.isFinite(minutes) || minutes <= 0) {
+          this.$set(this.task, 'estimate', {});
+          return;
+        }
+        this.$set(this.task, 'estimate', {
+          minutes: Math.min(minutes, 1440),
+          source: 'user',
+          updatedAt: new Date(),
+        });
+      },
+    },
     checklistEnabled () {
       return ['daily', 'todo'].indexOf(this.task.type) > -1 && !this.isOriginalChallengeTask;
     },
@@ -1585,6 +1661,26 @@ export default {
 
       return this.getTaskClasses(this.task, `${this.purpose === 'edit' ? 'edit' : 'create'}-modal-${suffix}`);
     },
+    async estimateWithAi () {
+      if (this.estimating || !this.task._id) return;
+      this.estimating = true;
+      try {
+        const estimate = await this.$store.dispatch('ai:estimateTask', { taskId: this.task._id });
+        this.aiEstimate = estimate;
+        this.$set(this.task, 'estimate', {
+          minutes: estimate.minutes,
+          source: 'ai',
+          confidence: estimate.confidence,
+          updatedAt: new Date(),
+        });
+        (estimate.checklist || []).forEach(itemEstimate => {
+          const item = (this.task.checklist || []).find(i => i.id === itemEstimate.id);
+          if (item) this.$set(item, 'estimateMinutes', itemEstimate.minutes);
+        });
+      } finally {
+        this.estimating = false;
+      }
+    },
     setDifficulty (level) {
       if (this.challengeAccessRequired) return;
       this.task.priority = level;
@@ -1690,6 +1786,7 @@ export default {
     },
     onClose () {
       this.newChecklistItem = '';
+      this.aiEstimate = null;
       this.$emit('cancel');
     },
     async toggleAssignment (memberId) {

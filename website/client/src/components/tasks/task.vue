@@ -253,6 +253,18 @@
               ></div>
               <span>{{ formatDueDate() }}</span>
             </div>
+            <div
+              v-if="estimateLabel"
+              class="d-flex align-items-center task-estimate"
+              :class="{ 'ml-2': task.type === 'todo' && task.date }"
+            >
+              <div
+                v-b-tooltip.hover.bottom="$t('timeEstimate')"
+                class="svg-icon clock my-auto"
+                v-html="icons.clock"
+              ></div>
+              <span>{{ estimateLabel }}</span>
+            </div>
             <div class="icons-right d-flex justify-content-end">
               <div
                 v-if="showStreak"
@@ -766,6 +778,19 @@
     margin-top: -2px;
   }
 
+  .clock.svg-icon {
+    width: 12px;
+    height: 12px;
+
+    ::v-deep path[fill] {
+      fill: $gray-200;
+    }
+
+    ::v-deep path[stroke] {
+      stroke: $gray-200;
+    }
+  }
+
   .challenge.svg-icon {
     width: 14px;
     height: 12px;
@@ -920,6 +945,8 @@ import deleteIcon from '@/assets/svg/delete.svg?raw';
 import checklistIcon from '@/assets/svg/checklist.svg?raw';
 import lockIcon from '@/assets/svg/lock.svg?raw';
 import menuIcon from '@/assets/svg/menu.svg?raw';
+import clockIcon from '@/assets/svg/clock.svg?raw';
+import formatDuration from '@/libs/formatDuration';
 import markdownDirective from '@/directives/markdown';
 import scoreTask from '@/mixins/scoreTask';
 import sync from '@/mixins/sync';
@@ -967,6 +994,7 @@ export default {
         bottom: bottomIcon,
         menu: menuIcon,
         lock: lockIcon,
+        clock: clockIcon,
       }),
     };
   },
@@ -984,6 +1012,11 @@ export default {
     }),
     hasChecklist () {
       return this.task.checklist && this.task.checklist.length > 0;
+    },
+    estimateLabel () {
+      if (this.task.type !== 'todo' && this.task.type !== 'daily') return '';
+      const minutes = this.task.estimate && this.task.estimate.minutes;
+      return minutes ? `~${formatDuration(minutes, this.$t)}` : '';
     },
     canViewchecklist () {
       const userIsTaskUser = this.task.userId ? this.task.userId === this.user._id : true;
