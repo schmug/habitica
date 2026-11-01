@@ -1,0 +1,18 @@
+{
+  "aiNotEnabled": "AI features are not enabled on this server.",
+  "aiNotEnabledForUser": "Turn on AI features in Settings to use this.",
+  "aiTaskNotSupported": "AI features work only on your own To Do's and Dailies for now.",
+  "aiTooManyRequests": "You have used the AI features too often. Please try again later.",
+  "aiRequestFailed": "The AI could not answer this request. Please try again.",
+  "aiFeatures": "AI features",
+  "aiFeaturesEnable": "Use AI features",
+  "aiFeaturesPop": "Lets Habitica send a task's title, notes and checklist to Claude (Anthropic's AI) to suggest things like time estimates. Nothing changes until you accept a suggestion.",
+  "timeEstimate": "Time estimate",
+  "timeEstimateMinutes": "Minutes",
+  "estimateWithAi": "Estimate with AI",
+  "estimating": "Estimating...",
+  "aiEstimateRange": "<%= low %> to <%= high %> min",
+  "minutesShort": "<%= minutes %>m",
+  "hoursMinutesShort": "<%= hours %>h <%= minutes %>m",
+  "hoursShort": "<%= hours %>h"
+}

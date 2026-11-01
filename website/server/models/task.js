@@ -115,6 +115,9 @@ export const TaskSchema = new Schema({
     ],
   },
   attribute: { $type: String, default: 'str', enum: ['str', 'con', 'int', 'per'] },
+  // How important the task is, separate from `priority` (which is difficulty
+  // and only scales rewards). Used by the AI-native planning features.
+  importance: { $type: String, enum: ['low', 'normal', 'high'] },
   userId: { $type: String, ref: 'User', validate: [v => validator.isUUID(v), 'Invalid uuid for task owner.'] }, // When not set it belongs to a challenge
 
   challenge: {
@@ -363,7 +366,15 @@ const dailyTodoSchema = () => ({
       $type: String, default: shared.uuid, required: true, validate: [v => validator.isUUID(v), 'Invalid uuid for task checklist item.'],
     },
     linkId: { $type: String },
+    estimateMinutes: { $type: Number, min: 1, max: 1440 },
   }],
+  // Expected time to complete the task, set by the user or accepted from an AI suggestion
+  estimate: {
+    minutes: { $type: Number, min: 1, max: 1440 },
+    source: { $type: String, enum: ['ai', 'user'] },
+    confidence: { $type: Number, min: 0, max: 1 },
+    updatedAt: { $type: Date },
+  },
 });
 
 export const HabitSchema = new Schema(_.defaults({

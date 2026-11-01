@@ -561,6 +561,10 @@ export const UserSchema = new Schema({
     skin: { $type: String, default: '915533' },
     shirt: { $type: String, default: 'blue' },
     timezoneOffset: { $type: Number, default: 0 },
+    ai: {
+      // Opt-in: AI features send task content to the Claude API
+      enabled: { $type: Boolean, default: false },
+    },
     sound: { $type: String, default: 'rosstavoTheme', enum: ['off', ...shared.content.audioThemes] },
     chair: { $type: String, default: 'none' },
     timezoneOffsetAtLastCron: Number,

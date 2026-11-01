@@ -47,6 +47,7 @@
         <day-start-adjustment-setting />
         <audio-theme-setting />
         <sleep-mode />
+        <ai-features-setting />
         <tr>
           <td colspan="3">
           </td>
@@ -101,9 +102,11 @@ import LoginMethods from '@/pages/settings/settingRows/loginMethods.vue';
 import { GenericUserPreferencesMixin } from '@/pages/settings/components/genericUserPreferencesMixin';
 import { mapState } from '@/libs/store';
 import SleepMode from '@/pages/settings/settingRows/sleepMode.vue';
+import AiFeaturesSetting from '@/pages/settings/settingRows/aiFeaturesSetting.vue';
 
 export default {
   components: {
+    AiFeaturesSetting,
     SleepMode,
     LoginMethods,
     FixValuesSetting,
